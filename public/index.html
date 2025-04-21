@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerador de Documento Médico</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #e8f0ff, #f7f9fc);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #app {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 420px;
+      transition: 0.3s ease;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+    }
+
+    button:disabled {
+      background-color: #a5d6a7;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #43a047;
+    }
+
+    .loader {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <h2>Gerador de Documento Médico</h2>
+
+    <input v-model="nome" placeholder="Nome do Paciente" type="text" />
+    <input v-model="descricao" placeholder="Descrição da Cirurgia" type="text" />
+    <input type="file" @change="onFileChange" />
+    <button @click="gerarDocumento" :disabled="loading">
+      {{ loading ? 'Gerando Documento...' : 'Gerar Documento' }}
+    </button>
+    <div class="loader" v-if="loading">Aguarde, estamos criando seu documento...</div>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+      setup() {
+        const nome = ref('');
+        const descricao = ref('');
+        const file = ref(null);
+        const loading = ref(false);
+
+        function onFileChange(e) {
+          file.value = e.target.files[0];
+        }
+
+        async function gerarDocumento() {
+          if (!file.value) {
+            alert('Selecione um template DOCX!');
+            return;
+          }
+
+          loading.value = true;
+
+          const formData = new FormData();
+          formData.append('nome', nome.value);
+          formData.append('descricao', descricao.value);
+          formData.append('template', file.value);
+
+          try {
+            const response = await fetch('/generate', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) throw new Error();
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'documento-preenchido.docx';
+            link.click();
+          } catch {
+            alert('Erro ao gerar documento');
+          } finally {
+            loading.value = false;
+          }
+        }
+
+        return {
+          nome,
+          descricao,
+          file,
+          loading,
+          onFileChange,
+          gerarDocumento,
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>
