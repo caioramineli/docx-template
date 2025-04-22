@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@ilovepdf/ilovepdf-nodejs": "^0.3.0",
     "cors": "^2.8.5",
     "docx-templates": "^4.14.1",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "multer": "^1.4.5-lts.2",
     "vue": "^3.5.13"
